@@ -4,24 +4,14 @@ import { createAuthMiddleware } from "better-auth/api";
 import { db } from "./db";
 import { getPasswordValidationError } from "./password-policy";
 import { getTrustedOrigins } from "./trusted-origins";
+import { getAuthBaseURL } from "./auth-url";
 
 export const auth = betterAuth({
   appName: "PataMatch",
-  baseURL: process.env.BETTER_AUTH_URL ?? "http://localhost:3000",
+  baseURL: getAuthBaseURL(),
   secret: process.env.BETTER_AUTH_SECRET,
   database: prismaAdapter(db, { provider: "postgresql" }),
-  trustedOrigins: async (request?: Request) => {
-    const staticOrigins = getTrustedOrigins();
-    if (!request) return staticOrigins;
-    const origin = request.headers.get("origin");
-    const host = request.headers.get("host");
-    const dynamic: string[] = [];
-    if (origin) dynamic.push(origin);
-    if (host) {
-      dynamic.push(`http://${host}`, `https://${host}`);
-    }
-    return [...new Set([...staticOrigins, ...dynamic])];
-  },
+  trustedOrigins: getTrustedOrigins(),
   emailAndPassword: { enabled: true, minPasswordLength: 10, maxPasswordLength: 128 },
   hooks: {
     before: createAuthMiddleware(async context => {

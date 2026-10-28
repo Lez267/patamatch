@@ -42,9 +42,10 @@ const navigation = {
 };
 
 function Login() {
+  const demoEnabled = process.env.NEXT_PUBLIC_DEMO_ACCESS !== "false";
   const { refresh } = useApp();
   const router = useRouter();
-  const [mode, setMode] = useState<"demo" | "register" | "login">("demo");
+  const [mode, setMode] = useState<"demo" | "register" | "login">(demoEnabled ? "demo" : "login");
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [name, setName] = useState("");
@@ -58,7 +59,7 @@ function Login() {
     setError("");
     try {
       const result = await authClient.signIn.email({ email: selectedEmail, password: selectedPassword });
-      if (result.error) throw new Error("No pudimos iniciar sesión. Revisa tus datos o elige una cuenta de demostración.");
+      if (result.error) throw new Error("No pudimos iniciar sesión. Revisa tu correo y contraseña.");
       await refresh();
       router.replace(role ? homes[role] : "/");
     } catch (failure) { setError(failure instanceof Error ? failure.message : "No hay conexión con el servidor."); }
@@ -99,15 +100,15 @@ function Login() {
   return (
     <Landing>
       <section className="login-card">
-        <div className="segmented-control login-tabs" role="group" aria-label="Opciones de acceso" style={{ marginBottom: "22px" }}>
-          <button
+        <div className="segmented-control login-tabs" role="group" aria-label="Opciones de acceso" style={{ marginBottom: "22px", gridTemplateColumns: demoEnabled ? undefined : "repeat(2, minmax(0, 1fr))" }}>
+          {demoEnabled && <button
             type="button"
             aria-pressed={mode === "demo"}
             className={`segment-btn ${mode === "demo" ? "active" : ""}`}
             onClick={() => { setMode("demo"); setError(""); }}
           >
             <Sparkles size={15} /> Demo (1 clic)
-          </button>
+          </button>}
           <button
             type="button"
             aria-pressed={mode === "register"}
@@ -126,7 +127,7 @@ function Login() {
           </button>
         </div>
 
-        {mode === "demo" && (
+        {demoEnabled && mode === "demo" && (
           <>
             <div className="row between" style={{ alignItems: "center", marginBottom: "8px" }}>
               <span className="badge green"><span className="status-dot" /> Evaluación docente</span>

@@ -3,8 +3,25 @@ import { PrismaClient } from "@prisma/client";
 import { hashPassword } from "better-auth/crypto";
 import { calculateMatch } from "../src/lib/matching";
 import { defaultProfile, type LifestyleProfile, type Pet } from "../src/lib/types";
+import { getPasswordValidationError } from "../src/lib/password-policy";
 
-if (existsSync(".env")) process.loadEnvFile(".env");
+const cloudSeed = process.argv.includes("--cloud");
+const environmentFile = cloudSeed ? ".env.cloud.local" : ".env";
+if (existsSync(environmentFile)) process.loadEnvFile(environmentFile);
+if (process.env.VERCEL === "1" && !cloudSeed) throw new Error("La siembra local no se ejecuta en Vercel.");
+const seedPassword = cloudSeed ? process.env.PATAMATCH_SEED_PASSWORD : "PataMatch2026!";
+if (!seedPassword || (cloudSeed && (seedPassword.length < 16 || getPasswordValidationError(seedPassword)))) {
+  throw new Error("Configura PATAMATCH_SEED_PASSWORD con al menos 16 caracteres y la política de contraseña de PataMatch.");
+}
+if (cloudSeed) {
+  const connection = process.env.DIRECT_URL || process.env.DATABASE_URL_UNPOOLED || process.env.DATABASE_URL;
+  if (!connection) throw new Error("Configura la conexión de la base nueva en .env.cloud.local.");
+  const url = new URL(connection);
+  if (["localhost", "127.0.0.1", "[::1]"].includes(url.hostname) || url.searchParams.get("sslmode") !== "require") {
+    throw new Error("La siembra cloud requiere una base remota con sslmode=require; no se tocará la base local.");
+  }
+  process.env.DATABASE_URL = connection;
+}
 
 const database = new PrismaClient();
 const demoProfile: LifestyleProfile = { ...defaultProfile, completed: true, experience: "intermedia", space: "grande", budget: "alto" };
@@ -64,8 +81,9 @@ const pets: Pet[] = [
 ];
 
 async function main() {
+  if (cloudSeed && await database.user.count() > 0) throw new Error("La siembra cloud inicial requiere una base sin usuarios. No se reemplazaron datos ni contraseñas.");
   const existingDemoAdopter = await database.user.findUnique({ where: { id: "demo-adoptante" }, select: { id: true } });
-  const password = await hashPassword("PataMatch2026!");
+  const password = await hashPassword(seedPassword!);
   const users = [
     { id: "demo-adoptante", name: "Andrea Martínez", email: "adoptante@patamatch.local", role: "ADOPTANTE" as const },
     { id: shelterId, name: shelterName, email: "refugio@patamatch.local", role: "REFUGIO" as const },
@@ -115,7 +133,9 @@ async function main() {
   }
   await database.report.upsert({ where: { id: "demo-report-rocky" }, create: { id: "demo-report-rocky", petId: "demo-rocky", reason: "Revisar que la ficha incluya todos los requisitos de manejo responsable y convivencia." }, update: {} });
   await database.report.upsert({ where: { id: "demo-report-toby" }, create: { id: "demo-report-toby", petId: "demo-toby", reason: "Verificar fecha del próximo refuerzo de vacunación.", status: "resuelto" }, update: {} });
-  console.log("Demo lista: 4 cuentas, 6 mascotas y datos persistentes de ejemplo. Contraseña: PataMatch2026!");
+  console.log(cloudSeed
+    ? "Demo cloud lista: 4 cuentas y datos ficticios. Usa la contraseña privada configurada; no se muestra en los logs."
+    : "Demo lista: 4 cuentas, 6 mascotas y datos persistentes de ejemplo. Contraseña: PataMatch2026!");
 }
 
 main().catch((error) => { console.error(error); process.exitCode = 1; }).finally(async () => { await database.$disconnect(); });
