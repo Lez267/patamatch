@@ -1,0 +1,287 @@
+/* Double-bezel luxury container for Miso */
+.mascotContainer {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 480px;
+  max-height: 680px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 24px;
+  border-radius: 32px;
+  background: radial-gradient(130% 120% at 75% 20%, rgba(46, 75, 55, 0.45) 0%, rgba(20, 36, 26, 0.75) 50%, rgba(12, 23, 17, 0.95) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 
+    0 24px 60px -12px rgba(6, 17, 10, 0.65),
+    inset 0 1px 1px rgba(255, 255, 255, 0.2),
+    inset 0 -1px 1px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(20px);
+  overflow: hidden;
+  user-select: none;
+  cursor: crosshair;
+  transition: border-color 400ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 400ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.mascotContainer:hover {
+  border-color: rgba(236, 221, 189, 0.28);
+  box-shadow: 
+    0 30px 80px -15px rgba(6, 17, 10, 0.8),
+    0 0 40px -10px rgba(226, 137, 41, 0.15),
+    inset 0 1px 1px rgba(255, 255, 255, 0.25);
+}
+
+.mascotContainer:focus-visible {
+  outline: 2px solid #ecd6a0;
+  outline-offset: 4px;
+}
+
+/* Ambient backlight behind character */
+.ambientGlow {
+  position: absolute;
+  inset: 15% 10% 20% 10%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(226, 137, 41, 0.18) 0%, rgba(84, 128, 97, 0.15) 45%, transparent 75%);
+  filter: blur(48px);
+  pointer-events: none;
+  z-index: 0;
+  transition: opacity 500ms ease;
+}
+
+/* Floating dust motes / light embers */
+.particlesLayer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.mote {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(circle, #ffeec7 0%, rgba(247, 192, 74, 0.4) 60%, transparent 100%);
+  filter: blur(0.5px);
+  animation: floatMote 7s infinite ease-in-out alternate;
+}
+
+.mote1 { width: 5px; height: 5px; top: 22%; left: 18%; animation-duration: 6.5s; opacity: 0.6; }
+.mote2 { width: 4px; height: 4px; top: 40%; right: 22%; animation-duration: 8.2s; animation-delay: -2s; opacity: 0.5; }
+.mote3 { width: 6px; height: 6px; bottom: 32%; left: 28%; animation-duration: 9s; animation-delay: -4s; opacity: 0.7; }
+.mote4 { width: 3px; height: 3px; top: 65%; right: 15%; animation-duration: 5.8s; animation-delay: -1.5s; opacity: 0.4; }
+
+@keyframes floatMote {
+  0% { transform: translateY(0) translateX(0) scale(1); opacity: 0.3; }
+  50% { transform: translateY(-18px) translateX(12px) scale(1.2); opacity: 0.8; }
+  100% { transform: translateY(-34px) translateX(-8px) scale(0.9); opacity: 0.2; }
+}
+
+/* Card Header / Badge */
+.metaHeader {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  pointer-events: none;
+}
+
+.metaEyebrow {
+  display: block;
+  font-family: "Plus Jakarta Sans", sans-serif;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  color: #b7caa9;
+  text-transform: uppercase;
+  margin-bottom: 3px;
+}
+
+.metaTitle {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.metaTitle h3 {
+  font-family: "Fraunces", Georgia, serif;
+  font-size: 32px;
+  font-weight: 500;
+  color: #f7f3ea;
+  margin: 0;
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+
+.badgeBreed {
+  font-family: "Plus Jakarta Sans", sans-serif;
+  font-size: 10px;
+  font-weight: 500;
+  color: #c9dac3;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 3px 9px;
+  border-radius: 12px;
+  backdrop-filter: blur(8px);
+}
+
+.pauseToggle {
+  pointer-events: auto;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #d1dfca;
+  cursor: pointer;
+  transition: background 200ms ease, color 200ms ease, transform 150ms ease;
+}
+
+.pauseToggle:hover {
+  background: rgba(255, 255, 255, 0.16);
+  color: #ffffff;
+  transform: scale(1.05);
+}
+
+/* Stage & Character */
+.stage {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 280px;
+  z-index: 2;
+  margin: 10px 0;
+}
+
+.groundShadow {
+  position: absolute;
+  bottom: 12px;
+  width: 220px;
+  height: 24px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(0, 0, 0, 0.65) 0%, rgba(6, 17, 10, 0.3) 60%, transparent 80%);
+  filter: blur(8px);
+  pointer-events: none;
+}
+
+.catActor {
+  width: 100%;
+  max-width: 380px;
+  height: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.catSvg {
+  width: 100%;
+  height: auto;
+  overflow: visible;
+  filter: drop-shadow(0 14px 28px rgba(3, 10, 6, 0.35));
+}
+
+/* Sparkle particles on boop / click */
+.sparkle {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  box-shadow: 0 0 10px 2px rgba(252, 211, 110, 0.7);
+  z-index: 10;
+}
+
+/* Dynamic Status Pill (Linear/Apple aesthetic) */
+.statusPill {
+  position: relative;
+  z-index: 3;
+  align-self: center;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 18px;
+  border-radius: 9999px;
+  background: rgba(18, 33, 24, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 
+    0 10px 25px -5px rgba(3, 10, 6, 0.45),
+    inset 0 1px 1px rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(16px);
+  pointer-events: none;
+  transition: border-color 300ms ease, background 300ms ease;
+}
+
+.statusDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #f4b248;
+  box-shadow: 0 0 8px #f4b248;
+  transition: background 300ms ease, box-shadow 300ms ease;
+}
+
+.statusDot[data-active="true"] {
+  background: #64e38e;
+  box-shadow: 0 0 10px #64e38e;
+}
+
+.statusText {
+  font-family: "Plus Jakarta Sans", sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  color: #f0ebe1;
+  letter-spacing: -0.01em;
+}
+
+.hintIcon {
+  display: flex;
+  align-items: center;
+  color: #d2e0cc;
+}
+
+.iconPaw {
+  animation: gentlePulse 1.2s infinite ease-in-out;
+}
+
+@keyframes gentlePulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.2) rotate(6deg); }
+}
+
+.cardFooter {
+  position: relative;
+  z-index: 3;
+  text-align: center;
+  font-family: "Plus Jakarta Sans", sans-serif;
+  font-size: 10px;
+  color: #9cb296;
+  margin-top: 6px;
+  pointer-events: none;
+}
+
+/* Responsiveness */
+@media (max-width: 768px) {
+  .mascotContainer {
+    min-height: 420px;
+    padding: 18px;
+    border-radius: 26px;
+  }
+  .metaTitle h3 {
+    font-size: 26px;
+  }
+  .statusPill {
+    padding: 7px 14px;
+  }
+  .statusText {
+    font-size: 10px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mote, .statusDot, .catActor, .groundShadow, .iconPaw {
+    animation: none !important;
+    transition: none !important;
+  }
+}

@@ -1,0 +1,188 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADOPTANTE
+  REFUGIO
+  VETERINARIO
+  ADMIN
+}
+
+model User {
+  id            String   @id
+  name          String
+  email         String   @unique
+  emailVerified Boolean  @default(false)
+  image         String?
+  role          Role     @default(ADOPTANTE)
+  active        Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  sessions      Session[]
+  accounts      Account[]
+  profile       Profile?
+  pets          Pet[]
+  favorites     Favorite[]
+  applications  AdoptionApplication[]
+  medicalRecords MedicalRecord[]
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Account {
+  id                    String   @id
+  accountId             String
+  providerId            String
+  userId                String
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([providerId, accountId])
+  @@index([userId])
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
+}
+
+model Profile {
+  userId    String   @id
+  data      Json
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Pet {
+  id           String   @id @default(cuid())
+  name         String
+  species      String
+  breed        String
+  age          String
+  ageYears     Float
+  sex          String
+  size         String
+  energy       String
+  personality  String[]
+  children     String
+  otherPets    String
+  care         String
+  health       String
+  vaccinated   Boolean
+  neutered     Boolean
+  regulated    Boolean  @default(false)
+  description  String
+  city         String
+  image        String
+  shelterId    String
+  status       String   @default("disponible")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  shelter      User     @relation(fields: [shelterId], references: [id])
+  favorites    Favorite[]
+  applications AdoptionApplication[]
+  medicalRecords MedicalRecord[]
+  reports      Report[]
+
+  @@index([shelterId, status])
+  @@index([status, createdAt])
+}
+
+model Favorite {
+  userId    String
+  petId     String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  pet       Pet      @relation(fields: [petId], references: [id], onDelete: Cascade)
+
+  @@id([userId, petId])
+}
+
+model AdoptionApplication {
+  id               String   @id @default(cuid())
+  folio            String   @unique
+  petId            String
+  adopterId        String
+  status           String   @default("enviada")
+  motivation       String
+  phone            String
+  commitment       Boolean
+  profileSnapshot  Json
+  matchingSnapshot Json
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  pet              Pet      @relation(fields: [petId], references: [id])
+  adopter          User     @relation(fields: [adopterId], references: [id])
+  events           ApplicationEvent[]
+
+  @@index([adopterId, status])
+  @@index([petId, status])
+}
+
+model ApplicationEvent {
+  id            String   @id @default(cuid())
+  applicationId String
+  status        String
+  note          String
+  at            DateTime @default(now())
+  application   AdoptionApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@index([applicationId, at])
+}
+
+model MedicalRecord {
+  id             String   @id @default(cuid())
+  petId          String
+  veterinarianId String
+  kind           String
+  notes          String
+  date           DateTime
+  nextDate       DateTime?
+  createdAt      DateTime @default(now())
+  pet            Pet      @relation(fields: [petId], references: [id])
+  veterinarian   User     @relation(fields: [veterinarianId], references: [id])
+
+  @@index([petId, date])
+  @@index([veterinarianId])
+}
+
+model Report {
+  id        String   @id @default(cuid())
+  petId     String
+  reason    String
+  status    String   @default("pendiente")
+  createdAt DateTime @default(now())
+  pet       Pet      @relation(fields: [petId], references: [id], onDelete: Cascade)
+}
