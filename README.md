@@ -1,6 +1,6 @@
 # PataMatch · Aplicación local
 
-Para publicar la demo por GitHub y la web de Vercel, sin instalar Vercel CLI, consulta [DESPLIEGUE_VERCEL.md](DESPLIEGUE_VERCEL.md). El despliegue necesita PostgreSQL remoto; subir el repositorio no sube la base local.
+El despliegue en Vercel necesita PostgreSQL remoto; subir el repositorio no sube la base local.
 
 Aplicación funcional para la presentación de Diseño de Interfaces de Usuario. Los mockups originales de Jorge-Interfaces se conservaron sin cambios. Esta aplicación es un proyecto nuevo e independiente.
 
