@@ -90,6 +90,7 @@ export interface MedicalRecord {
   notes: string;
   date: string;
   nextDate: string | null;
+  createdAt: string;
 }
 
 export interface Report {
@@ -108,17 +109,65 @@ export interface AppState {
   medicalRecords: MedicalRecord[];
   users: User[];
   reports: Report[];
+  veterinaryProfile: VeterinaryProfile | null;
+  veterinarians: VeterinaryDirectoryEntry[];
+  collaborations: Collaboration[];
+  auditEvents: AuditEvent[];
+}
+
+export interface VeterinaryProfile {
+  clinicName: string;
+  phone: string;
+  city: string;
+  specialty: string;
+  bio: string;
+  available: boolean;
+}
+
+export interface VeterinaryDirectoryEntry extends VeterinaryProfile {
+  id: string;
+  name: string;
+  email: string;
+}
+
+export interface Collaboration {
+  id: string;
+  shelterId: string;
+  shelterName: string;
+  shelterEmail: string;
+  veterinarianId: string;
+  veterinarianName: string;
+  veterinarianEmail: string;
+  status: "PENDING" | "ACCEPTED" | "REJECTED" | "CANCELLED" | "ENDED";
+  message: string;
+  createdAt: string;
+  updatedAt: string;
+  participantsActive: boolean;
+}
+
+export interface AuditEvent {
+  id: string;
+  actorId: string;
+  actorName: string;
+  actorRole: string;
+  action: string;
+  targetName: string;
+  targetId: string;
+  before: Record<string, unknown>;
+  after: Record<string, unknown>;
+  createdAt: string;
 }
 
 export type PetInput = Omit<Pet, "id" | "shelterId" | "shelterName" | "createdAt">;
 export type Command =
+  | import("./collaborations").CollaborationCommand
   | { type: "profile.save"; profile: LifestyleProfile }
   | { type: "favorite.toggle"; petId: string }
   | { type: "application.create"; petId: string; motivation: string; phone: string; commitment: boolean }
   | { type: "application.status"; id: string; status: ApplicationStatus; note: string }
   | { type: "pet.create"; pet: PetInput }
   | { type: "pet.update"; id: string; changes: Partial<PetInput> }
-  | { type: "medical.create"; record: Omit<MedicalRecord, "id" | "veterinarianId" | "veterinarianName"> }
+  | { type: "medical.create"; record: Omit<MedicalRecord, "id" | "veterinarianId" | "veterinarianName" | "createdAt"> }
   | { type: "user.toggle"; id: string }
   | { type: "user.role"; id: string; role: Role }
   | { type: "report.resolve"; id: string }

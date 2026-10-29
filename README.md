@@ -2,6 +2,12 @@
 
 El despliegue en Vercel necesita PostgreSQL remoto; subir el repositorio no sube la base local.
 
+## Equipo veterinario y bitácora
+
+Los refugios solicitan colaboración a veterinarios que publicaron su disponibilidad. El profesional debe aceptar antes de acceder a sus mascotas y expedientes. Las pantallas están en Refugio → Veterinarios, Veterinario → Mis refugios y Administración → Bitácora. No se vinculan cuentas automáticamente.
+
+La actualización necesita la migración aditiva de colaboraciones. Consulta [el flujo, permisos y despliegue](scripts/COLABORACIONES.md) antes de actualizar Neon. `build:vercel` aplica las migraciones pendientes antes de compilar; no elimina datos ni crea asignaciones existentes.
+
 Aplicación funcional para la presentación de Diseño de Interfaces de Usuario. Los mockups originales de Jorge-Interfaces se conservaron sin cambios. Esta aplicación es un proyecto nuevo e independiente.
 
 ## Abrir en esta computadora

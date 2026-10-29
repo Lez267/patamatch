@@ -5,7 +5,7 @@ import { createAuthClient } from "better-auth/react";
 import type { AppState, Command } from "@/lib/types";
 
 export const authClient = createAuthClient();
-const emptyState: AppState = { user: null, pets: [], profile: null, favorites: [], applications: [], medicalRecords: [], users: [], reports: [] };
+const emptyState: AppState = { user: null, pets: [], profile: null, favorites: [], applications: [], medicalRecords: [], users: [], reports: [], veterinaryProfile: null, veterinarians: [], collaborations: [], auditEvents: [] };
 type AppContext = {
   state: AppState;
   loading: boolean;

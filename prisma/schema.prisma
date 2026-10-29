@@ -31,6 +31,59 @@ model User {
   favorites     Favorite[]
   applications  AdoptionApplication[]
   medicalRecords MedicalRecord[]
+  veterinaryProfile VeterinaryProfile?
+  shelterCollaborations Collaboration[] @relation("ShelterCollaborations")
+  veterinaryCollaborations Collaboration[] @relation("VeterinaryCollaborations")
+}
+
+enum CollaborationStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  CANCELLED
+  ENDED
+}
+
+model VeterinaryProfile {
+  userId String @id
+  clinicName String @default("")
+  phone String @default("")
+  city String @default("")
+  specialty String @default("")
+  bio String @default("")
+  available Boolean @default(false)
+  updatedAt DateTime @updatedAt
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Collaboration {
+  id String @id @default(cuid())
+  shelterId String
+  veterinarianId String
+  status CollaborationStatus @default(PENDING)
+  message String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  shelter User @relation("ShelterCollaborations", fields: [shelterId], references: [id], onDelete: Restrict)
+  veterinarian User @relation("VeterinaryCollaborations", fields: [veterinarianId], references: [id], onDelete: Restrict)
+
+  @@unique([shelterId, veterinarianId])
+  @@index([veterinarianId, status])
+}
+
+model AuditEvent {
+  id String @id @default(cuid())
+  actorId String
+  actorName String
+  actorRole String
+  action String
+  targetId String
+  targetName String
+  before Json
+  after Json
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
 }
 
 model Session {

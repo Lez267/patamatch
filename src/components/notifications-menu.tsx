@@ -156,8 +156,18 @@ export function NotificationMenu() {
         });
     }
 
+    if (role === "REFUGIO" || role === "VETERINARIO") {
+      for (const collaboration of state.collaborations) {
+        if (role === "VETERINARIO" && collaboration.status === "PENDING") {
+          list.push({ id: `${collaboration.id}-${collaboration.updatedAt}`, title: "Solicitud de colaboración", message: `${collaboration.shelterName} quiere colaborar contigo.`, link: "/veterinario/refugios", at: collaboration.updatedAt });
+        } else if (role === "REFUGIO" && collaboration.status !== "PENDING") {
+          const status = { ACCEPTED: "aceptó la colaboración", REJECTED: "rechazó la solicitud", CANCELLED: "tiene una solicitud cancelada", ENDED: "tiene una colaboración finalizada" }[collaboration.status];
+          list.push({ id: `${collaboration.id}-${collaboration.updatedAt}`, title: "Equipo veterinario", message: `${collaboration.veterinarianName}: ${status}.`, link: "/refugio/veterinarios", at: collaboration.updatedAt });
+        }
+      }
+    }
     return list.sort((a, b) => b.at.localeCompare(a.at));
-  }, [state.user, state.applications, state.pets, role]);
+  }, [state.user, state.applications, state.pets, state.collaborations, role]);
 
   const unreadCount = notifications.filter((n) => !readIds.includes(n.id)).length;
 

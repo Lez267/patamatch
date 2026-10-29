@@ -16,6 +16,7 @@
     "db:seed": "tsx prisma/seed.ts",
     "db:seed:cloud": "tsx prisma/seed.ts --cloud",
     "db:migrate": "node scripts/migrate.mjs",
+    "admin:reset-password": "bash scripts/reset-admin-password.sh",
     "test": "node --import tsx --test --experimental-test-isolation=none tests/*.test.ts"
   },
   "dependencies": {

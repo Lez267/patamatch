@@ -190,7 +190,7 @@
 .steps strong, .steps li div > span { display: block; }
 .steps strong { font-size: 14px; font-weight: 700; margin-bottom: 2px; }
 .steps li div > span { color: var(--muted); font-size: 11px; line-height: 1.5; }
-.footer { display: flex; justify-content: space-between; gap: 16px; padding: 16px var(--hero-gutter) 22px; color: var(--muted); font-size: 10px; }
+.footer { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 16px; padding: 16px var(--hero-gutter) 22px; color: var(--muted); font-size: 12px; line-height: 1.5; }
 .footer > span:last-child { display: flex; align-items: center; gap: 8px; }
 
 .dialog { width: min(620px, calc(100vw - 32px)); max-width: none; max-height: calc(100svh - 40px); border: 0; border-radius: var(--radius-lg); padding: 0; background: var(--bg); color: var(--ink); box-shadow: 0 25px 80px color-mix(in srgb, var(--forest-dk) 30%, transparent); }
@@ -275,7 +275,7 @@
   .brand { gap: 10px; }
   .brand :global(.brand-mark) { width: 40px; height: 40px; border-radius: 14px; }
   .brand :global(.brand-wordmark) { font-size: 23px; }
-  .brand :global(.brand-wordmark) > span { font-size: 8px; margin-top: 3px; }
+  .brand :global(.brand-wordmark) > span { font-size: 12px; margin-top: 3px; }
   .hero { grid-template-columns: 1fr; gap: 30px; padding-top: 18px; padding-bottom: 32px; }
   .copy { padding-bottom: 0; }
   .intro { font-size: 11px; }
@@ -298,7 +298,7 @@
   .stepIcon { width: 46px; height: 46px; border-radius: 16px; }
   .steps strong { font-size: 14px; }
   .steps li div > span { font-size: 12px; }
-  .footer { flex-direction: column; gap: 6px; padding-top: 18px; font-size: 10px; }
+  .footer { flex-direction: column; gap: 6px; padding-top: 18px; font-size: 12px; }
   .about { padding: 38px 25px 28px; }
   .about h2 { font-size: 34px; }
   .dialogBody :global(.login-card) { padding: 65px 23px 26px; }

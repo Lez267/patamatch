@@ -2,15 +2,16 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ArrowLeft, ArrowRight, Bell, CalendarDays, ClipboardList, Heart, Home, KeyRound, LayoutDashboard, LoaderCircle, LogIn, LogOut, PawPrint, Plus, Search, Settings2, ShieldCheck, Sparkles, Stethoscope, UserRound, UsersRound } from "lucide-react";
 import { authClient, useApp } from "@/components/app-provider";
 import { Adopter } from "@/components/adopter";
 import { NotificationMenu } from "@/components/notifications-menu";
 import { Workspace } from "@/components/dashboards";
 import { Landing } from "@/components/landing";
+import { PasswordField } from "@/components/password-field";
 import type { Role } from "@/lib/types";
-import { getPasswordValidationError, validatePasswordSecurity } from "@/lib/password-policy";
+import { getPasswordConfirmationError, getPasswordValidationError, validatePasswordSecurity } from "@/lib/password-policy";
 
 const homes: Record<Role, string> = { ADOPTANTE: "/explorar", REFUGIO: "/refugio", VETERINARIO: "/veterinario", ADMIN: "/admin" };
 const roleNames: Record<Role, string> = { ADOPTANTE: "Adoptante", REFUGIO: "Refugio", VETERINARIO: "Veterinario", ADMIN: "Administrador" };
@@ -27,17 +28,20 @@ const navigation = {
     { href: "/refugio/mascotas", label: "Mis mascotas", icon: PawPrint },
     { href: "/refugio/solicitudes", label: "Solicitudes", icon: ClipboardList },
     { href: "/refugio/entrevistas", label: "Entrevistas y visitas", icon: CalendarDays },
+    { href: "/refugio/veterinarios", label: "Veterinarios", icon: Stethoscope },
   ],
   VETERINARIO: [
     { href: "/veterinario", label: "Resumen", icon: LayoutDashboard },
     { href: "/veterinario/expedientes", label: "Expedientes", icon: Stethoscope },
     { href: "/veterinario/agenda", label: "Próximos cuidados", icon: CalendarDays },
+    { href: "/veterinario/refugios", label: "Mis refugios", icon: Home },
   ],
   ADMIN: [
     { href: "/admin", label: "Resumen", icon: LayoutDashboard },
     { href: "/admin/usuarios", label: "Usuarios", icon: UsersRound },
     { href: "/admin/mascotas", label: "Mascotas", icon: PawPrint },
     { href: "/admin/reportes", label: "Moderación", icon: ShieldCheck },
+    { href: "/admin/bitacora", label: "Bitácora", icon: ClipboardList },
   ],
 };
 
@@ -51,8 +55,12 @@ function Login() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [passwordConfirmation, setPasswordConfirmation] = useState("");
+  const [confirmationTouched, setConfirmationTouched] = useState(false);
+  const confirmationRef = useRef<HTMLInputElement>(null);
 
   const pwdCheck = validatePasswordSecurity(password);
+  const confirmationError = confirmationTouched ? getPasswordConfirmationError(password, passwordConfirmation) : null;
 
   async function signIn(selectedEmail: string, selectedPassword: string, role?: Role) {
     setBusy(role ?? "credentials");
@@ -75,6 +83,12 @@ function Login() {
     const passwordError = getPasswordValidationError(password);
     if (passwordError) {
       setError(passwordError);
+      return;
+    }
+    if (getPasswordConfirmationError(password, passwordConfirmation)) {
+      setError("");
+      setConfirmationTouched(true);
+      confirmationRef.current?.focus();
       return;
     }
     setBusy("register");
@@ -186,18 +200,14 @@ function Login() {
                   onChange={(event) => setEmail(event.target.value)}
                 />
               </label>
-              <label className="field">
-                Contraseña
-                <input
-                  className="input"
-                  type="password"
+              <div className="field">
+                <PasswordField
                   minLength={10}
                   maxLength={128}
                   autoComplete="new-password"
-                  required
                   placeholder="Mínimo 10 caracteres"
                   value={password}
-                  onChange={(event) => setPassword(event.target.value)}
+                  onChange={setPassword}
                 />
                 {password.length > 0 && (
                   <div className="password-checklist" style={{ fontSize: "0.78rem", marginTop: "8px", display: "flex", flexDirection: "column", gap: "4px", padding: "10px 14px", borderRadius: "12px", background: "rgba(255, 255, 255, 0.45)", border: "1px solid var(--border)" }}>
@@ -218,7 +228,19 @@ function Login() {
                     </span>
                   </div>
                 )}
-              </label>
+              </div>
+              <PasswordField
+                label="Confirmar contraseña"
+                value={passwordConfirmation}
+                onChange={setPasswordConfirmation}
+                onBlur={() => setConfirmationTouched(true)}
+                inputRef={confirmationRef}
+                autoComplete="new-password"
+                minLength={10}
+                maxLength={128}
+                placeholder="Vuelve a escribir tu contraseña"
+                error={confirmationError}
+              />
               <button className="button primary full" disabled={!!busy}>
                 {busy === "register" ? <><LoaderCircle className="spin" size={18} /> Creando tu cuenta…</> : <>Crear cuenta y hacer mi test <ArrowRight size={18} /></>}
               </button>
@@ -244,18 +266,7 @@ function Login() {
                   onChange={(event) => setEmail(event.target.value)}
                 />
               </label>
-              <label className="field">
-                Contraseña
-                <input
-                  className="input"
-                  type="password"
-                  minLength={8}
-                  autoComplete="current-password"
-                  required
-                  value={password}
-                  onChange={(event) => setPassword(event.target.value)}
-                />
-              </label>
+              <PasswordField value={password} onChange={setPassword} />
               <button className="button primary full" disabled={!!busy}>
                 {busy === "credentials" ? <><LoaderCircle className="spin" size={18} /> Entrando…</> : <>Iniciar sesión <ArrowRight size={18} /></>}
               </button>

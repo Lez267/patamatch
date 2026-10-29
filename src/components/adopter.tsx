@@ -9,6 +9,7 @@ import { AdoptionCertificateModal } from "@/components/adoption-certificate";
 import { useApp } from "@/components/app-provider";
 import { TestWizard } from "@/components/test-wizard";
 import { calculateMatch } from "@/lib/matching";
+import { applicationAnchor, applicationHref } from "@/lib/application-links";
 import { statusLabels, type AdoptionApplication, type Pet } from "@/lib/types";
 
 export const sizeNames = { pequeno: "Pequeño", mediano: "Mediano", grande: "Grande" };
@@ -232,7 +233,7 @@ function PetDetail({ id }: { id: string }) {
             </div>
           </div>
         ) : previous ? (
-          <Link className="button primary" href="/adopciones">Ver mi solicitud<ArrowRight size={18} /></Link>
+          <Link className="button primary" href={applicationHref(previous.id)}>Ver mi solicitud<ArrowRight size={18} /></Link>
         ) : !state.profile?.completed ? (
           <Link className="button primary" href="/test">Completar mi test<Sparkles size={18} /></Link>
         ) : match.eligible && pet.status === "disponible" ? (
@@ -587,9 +588,9 @@ function AdoptionRequest({ petId }: { petId: string }) {
   if (!pet) return <Empty title="No encontramos esa mascota" description="Vuelve al catálogo para elegir una mascota disponible."><Link href="/explorar" className="button primary">Explorar mascotas</Link></Empty>;
   const match = calculateMatch(pet, state.profile);
   const petApplications = state.applications.filter(application => application.petId === pet.id);
-  const existing = petApplications.some(application => !["cancelada", "rechazada"].includes(application.status));
+  const existing = petApplications.find(application => !["cancelada", "rechazada"].includes(application.status));
   const rejections = petApplications.filter(application => application.status === "rechazada").length;
-  if (existing) return <Empty title="Tu solicitud ya está en camino" description={`Ya tienes una solicitud para ${pet.name}. Puedes consultar los siguientes pasos en Mis adopciones.`}><Link className="button primary" href="/adopciones">Ver mi solicitud</Link></Empty>;
+  if (existing) return <Empty title="Tu solicitud ya está en camino" description={`Ya tienes una solicitud para ${pet.name}. Puedes consultar los siguientes pasos en Mis adopciones.`}><Link className="button primary" href={applicationHref(existing.id)}>Ver mi solicitud</Link></Empty>;
   if (rejections >= 3) return <Empty title="Límite de solicitudes alcanzado" description={`Has alcanzado el límite de 3 solicitudes no procedentes para ${pet.name}. Te sugerimos conocer a otras mascotas disponibles.`}><Link className="button primary" href="/explorar">Explorar otras mascotas</Link></Empty>;
   if (!state.profile?.completed || !match.eligible || pet.status !== "disponible") return <Empty title="Revisemos los requisitos antes de continuar" description="Para solicitar una adopción, completa tu test y comprueba los requisitos de convivencia en la ficha."><Link className="button primary" href={`/mascotas/${pet.id}`}>Volver a la ficha</Link></Empty>;
   return <><Link className="back-link" href={`/mascotas/${pet.id}`}><ArrowLeft size={17} />Volver a la ficha</Link><div className="page-head"><div><span className="eyebrow">El primer paso hacia su nuevo hogar</span><h1 className="page-title">Tu solicitud para {pet.name}</h1><p className="page-subtitle">El refugio recibirá tu perfil y se pondrá en contacto contigo para continuar.</p></div></div><div className="two-col request-layout"><form className="panel stack" onSubmit={async event => { event.preventDefault(); setError(""); if (motivation.trim().length < 30) { setError("Cuéntanos un poco más: escribe al menos 30 caracteres."); return; } if (phone.replace(/\D/g, "").length !== 10) { setError("Escribe un teléfono de 10 dígitos."); return; } if (!commitments.every(Boolean)) { setError("Confirma los tres compromisos para enviar tu solicitud."); return; } setSaving(true); if (await mutate({ type: "application.create", petId: pet.id, motivation: motivation.trim(), phone: phone.replace(/\D/g, ""), commitment: true })) { toast("Solicitud enviada. Ya puedes consultar tu folio y seguimiento."); router.push("/adopciones"); } setSaving(false); }}>{rejections > 0 && <div className="notice warning"><Info size={18} /><p>Esta es tu solicitud #{rejections + 1} de 3 permitidas para {pet.name}. Recuerda detallar cómo han mejorado tus condiciones para su cuidado.</p></div>}<h2>Cuéntanos sobre ti</h2><div className="form-grid"><label className="field">Nombre<input className="input" value={state.user?.name ?? ""} readOnly /></label><label className="field">Correo<input className="input" value={state.user?.email ?? ""} readOnly /></label></div><label className="field">Teléfono de contacto<input className="input" type="tel" inputMode="tel" autoComplete="tel-national" required minLength={10} maxLength={16} placeholder="10 dígitos" value={phone} onChange={event => setPhone(event.target.value)} /></label><label className="field">¿Por qué quieres adoptar a {pet.name}?<textarea className="textarea" rows={5} minLength={30} maxLength={2000} required value={motivation} onChange={event => setMotivation(event.target.value)} placeholder="Cuéntanos cómo sería su vida contigo, quién apoyaría en sus cuidados y qué te conectó con su historia." /><span className="helper">{motivation.length}/2000 caracteres · mínimo 30</span></label><h3>Una adopción responsable</h3>{["Confirmo que mi hogar puede recibir a la mascota y que las personas que viven conmigo están de acuerdo.", "Me comprometo a cubrir su alimentación, atención veterinaria y bienestar durante toda su vida.", "Acepto participar en la entrevista y el seguimiento del refugio; enviar la solicitud no garantiza la aprobación."].map((text, index) => <label key={text} className="checkbox-row"><input type="checkbox" required checked={commitments[index]} onChange={event => setCommitments(previous => previous.map((value, item) => item === index ? event.target.checked : value))} />{text}</label>)}{error && <p className="error" role="alert">{error}</p>}<button className="button primary" disabled={saving}>{saving ? "Enviando solicitud…" : "Enviar mi solicitud"}<Heart size={18} /></button></form><aside className="stack"><div className="pet-card"><img className="pet-image" src={pet.image} alt={pet.name} /><div className="pet-info"><h2>{pet.name}</h2><p>{pet.breed} · {sizeNames[pet.size]}</p><span className="badge green"><Sparkles size={14} />{match.score}% match</span><p className="muted">{pet.shelterName} · {pet.city}</p></div></div><div className="notice"><ShieldCheck size={22} /><p>Tu solicitud se comparte con el refugio responsable. Podrás ver cada actualización en Mis adopciones.</p></div></aside></div></>;
@@ -597,6 +598,8 @@ function AdoptionRequest({ petId }: { petId: string }) {
 
 function ApplicationCard({ application }: { application: AdoptionApplication }) {
   const { state, mutate, toast } = useApp();
+  const cardRef = useRef<HTMLElement>(null);
+  const detailsRef = useRef<HTMLDetailsElement>(null);
   const [confirmCancel, setConfirmCancel] = useState(false);
   const [showCertificate, setShowCertificate] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -606,13 +609,31 @@ function ApplicationCard({ application }: { application: AdoptionApplication }) 
   const current = steps.indexOf(application.status);
   const sortedEvents = useMemo(() => [...application.events].reverse(), [application.events]);
 
+  useEffect(() => {
+    function focusRequestedApplication() {
+      if (window.location.hash !== `#${encodeURIComponent(applicationAnchor(application.id))}`) return;
+      if (detailsRef.current) detailsRef.current.open = true;
+      cardRef.current?.focus({ preventScroll: true });
+      cardRef.current?.scrollIntoView({ block: "start", behavior: "instant" });
+    }
+
+    const frame = window.requestAnimationFrame(focusRequestedApplication);
+    window.addEventListener("hashchange", focusRequestedApplication);
+    window.addEventListener("popstate", focusRequestedApplication);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.removeEventListener("hashchange", focusRequestedApplication);
+      window.removeEventListener("popstate", focusRequestedApplication);
+    };
+  }, [application.id]);
+
   return (
-    <article className="panel stack">
+    <article className="panel stack application-card" id={applicationAnchor(application.id)} ref={cardRef} tabIndex={-1} aria-labelledby={`${applicationAnchor(application.id)}-titulo`}>
       <div className="row between application-card-head">
         <div className="row">
           <img className="avatar pet-avatar" src={pet?.image ?? "/pets/coco.jpg"} alt={pet?.name ?? "Mascota"} />
           <div>
-            <h2>{pet?.name ?? "Mascota"}</h2>
+            <h2 id={`${applicationAnchor(application.id)}-titulo`}>{pet?.name ?? "Mascota"}</h2>
             <span className="muted">{application.folio} · {formatDate(application.createdAt)}</span>
           </div>
         </div>
@@ -632,7 +653,7 @@ function ApplicationCard({ application }: { application: AdoptionApplication }) 
         </ol>
       )}
 
-      <details open={!terminal}>
+      <details ref={detailsRef} open={!terminal}>
         <summary style={{ cursor: "pointer", fontWeight: 600 }}>
           Ver seguimiento y mi solicitud ({sortedEvents.length} {sortedEvents.length === 1 ? "evento" : "actualizaciones"})
         </summary>

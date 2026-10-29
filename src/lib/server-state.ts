@@ -3,6 +3,10 @@ import { z } from "zod";
 import { auth } from "./auth";
 import { db } from "./db";
 import { calculateMatch, canTransitionApplication, isActiveApplication } from "./matching";
+import { collaborationCommands, collaborationCommandSchema, createAuthorizedMedicalRecord, executeCollaboration, veterinaryPetFilter } from "./collaborations";
+import { executeAccountAdministration } from "./account-administration";
+import { RequestError } from "./request-error";
+export { RequestError } from "./request-error";
 import type { AppState, AdoptionApplication, ApplicationStatus, LifestyleProfile, MedicalRecord, Pet, Role, User } from "./types";
 
 const sizeSchema = z.enum(["pequeno", "mediano", "grande"]);
@@ -57,6 +61,7 @@ const matchingSnapshotSchema = z.object({
 });
 
 export const commandSchema = z.discriminatedUnion("type", [
+  ...collaborationCommands,
   z.object({ type: z.literal("profile.save"), profile: profileSchema }).strict(),
   z.object({ type: z.literal("favorite.toggle"), petId: identifierSchema }).strict(),
   z.object({ type: z.literal("application.create"), petId: identifierSchema, motivation: z.string().trim().min(30).max(3000), phone: z.string().trim().regex(/^[0-9]{10}$/, "Escribe un teléfono de 10 dígitos."), commitment: z.boolean() }).strict(),
@@ -69,10 +74,6 @@ export const commandSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("report.resolve"), id: identifierSchema }).strict(),
   z.object({ type: z.literal("demo.reset") }).strict(),
 ]);
-
-export class RequestError extends Error {
-  constructor(message: string, public status = 400) { super(message); }
-}
 
 type PetRow = Prisma.PetGetPayload<{ include: { shelter: { select: { name: true } } } }>;
 
@@ -99,17 +100,22 @@ export async function getViewer(headers: Headers): Promise<User | null> {
 export async function getServerState(headers: Headers): Promise<AppState> {
   const user = await getViewer(headers);
   const publishedFilter: Prisma.PetWhereInput = { status: { not: "pausado" }, shelter: { active: true, role: "REFUGIO" } };
-  const petFilter: Prisma.PetWhereInput = user?.role === "ADMIN" ? {} : user?.role === "VETERINARIO" ? { shelter: { active: true, role: "REFUGIO" } } : user?.role === "REFUGIO" ? { OR: [publishedFilter, { shelterId: user.id }] } : user?.role === "ADOPTANTE" ? { OR: [publishedFilter, { applications: { some: { adopterId: user.id } } }] } : publishedFilter;
+  const petFilter: Prisma.PetWhereInput = user?.role === "ADMIN" ? {} : user?.role === "VETERINARIO" ? veterinaryPetFilter(user.id) : user?.role === "REFUGIO" ? { OR: [publishedFilter, { shelterId: user.id }] } : user?.role === "ADOPTANTE" ? { OR: [publishedFilter, { applications: { some: { adopterId: user.id } } }] } : publishedFilter;
   const applicationFilter: Prisma.AdoptionApplicationWhereInput | null = !user ? null : user.role === "ADMIN" ? {} : user.role === "REFUGIO" ? { pet: { shelterId: user.id } } : user.role === "ADOPTANTE" ? { adopterId: user.id } : null;
-  const canReadMedical = user?.role === "ADMIN" || user?.role === "VETERINARIO";
-  const [pets, profile, favorites, applications, medicalRecords, users, reports] = await Promise.all([
+  const canReadMedical = user?.role === "ADMIN" || user?.role === "VETERINARIO" || user?.role === "REFUGIO";
+  const collaborationFilter: Prisma.CollaborationWhereInput | null = user?.role === "ADMIN" ? {} : user?.role === "REFUGIO" ? { shelterId: user.id } : user?.role === "VETERINARIO" ? { veterinarianId: user.id } : null;
+  const [pets, profile, favorites, applications, medicalRecords, users, reports, veterinaryProfile, veterinarians, collaborations, auditEvents] = await Promise.all([
     db.pet.findMany({ where: petFilter, include: { shelter: { select: { name: true } } }, orderBy: { createdAt: "asc" } }),
     user?.role === "ADOPTANTE" ? db.profile.findUnique({ where: { userId: user.id } }) : null,
     user?.role === "ADOPTANTE" ? db.favorite.findMany({ where: { userId: user.id, pet: publishedFilter }, select: { petId: true } }) : [],
     applicationFilter ? db.adoptionApplication.findMany({ where: applicationFilter, include: { adopter: { select: { name: true, email: true } }, events: { orderBy: { at: "asc" } } }, orderBy: { createdAt: "desc" } }) : [],
-    canReadMedical ? db.medicalRecord.findMany({ where: user?.role === "ADMIN" ? {} : { pet: { shelter: { active: true } } }, include: { veterinarian: { select: { name: true } } }, orderBy: { date: "desc" } }) : [],
+    canReadMedical ? db.medicalRecord.findMany({ where: user?.role === "ADMIN" ? {} : { pet: user?.role === "VETERINARIO" ? veterinaryPetFilter(user.id) : { shelterId: user!.id } }, include: { veterinarian: { select: { name: true } } }, orderBy: { date: "desc" } }) : [],
     user?.role === "ADMIN" ? db.user.findMany({ select: { id: true, name: true, email: true, role: true, active: true }, orderBy: { createdAt: "asc" } }) : [],
     user?.role === "ADMIN" ? db.report.findMany({ select: { id: true, petId: true, reason: true, status: true }, orderBy: { createdAt: "desc" } }) : [],
+    user?.role === "VETERINARIO" ? db.veterinaryProfile.findUnique({ where: { userId: user.id }, select: { clinicName: true, phone: true, city: true, specialty: true, bio: true, available: true } }) : null,
+    user?.role === "REFUGIO" ? db.user.findMany({ where: { role: "VETERINARIO", active: true, veterinaryProfile: { available: true } }, select: { id: true, name: true, email: true, veterinaryProfile: { select: { clinicName: true, phone: true, city: true, specialty: true, bio: true, available: true } } }, orderBy: { name: "asc" } }) : [],
+    collaborationFilter ? db.collaboration.findMany({ where: collaborationFilter, include: { shelter: { select: { name: true, email: true, active: true, role: true } }, veterinarian: { select: { name: true, email: true, active: true, role: true } } }, orderBy: { updatedAt: "desc" } }) : [],
+    user?.role === "ADMIN" ? db.auditEvent.findMany({ orderBy: [{ createdAt: "desc" }, { id: "desc" }], take: 200 }) : [],
   ]);
   const parsedProfile = profileSchema.safeParse(profile?.data);
   return {
@@ -127,8 +133,12 @@ export async function getServerState(headers: Headers): Promise<AppState> {
       events: application.events.map((event) => ({ status: event.status as ApplicationStatus, note: event.note, at: event.at.toISOString() })),
       };
     }),
-    medicalRecords: medicalRecords.map((record): MedicalRecord => ({ id: record.id, petId: record.petId, veterinarianId: record.veterinarianId, veterinarianName: record.veterinarian.name, kind: record.kind as MedicalRecord["kind"], notes: record.notes, date: record.date.toISOString().slice(0, 10), nextDate: record.nextDate?.toISOString().slice(0, 10) ?? null })),
+    medicalRecords: medicalRecords.map((record): MedicalRecord => ({ id: record.id, petId: record.petId, veterinarianId: record.veterinarianId, veterinarianName: record.veterinarian.name, kind: record.kind as MedicalRecord["kind"], notes: record.notes, date: record.date.toISOString().slice(0, 10), nextDate: record.nextDate?.toISOString().slice(0, 10) ?? null, createdAt: record.createdAt.toISOString() })),
     users, reports: reports.map((report) => ({ ...report, status: report.status as "pendiente" | "resuelto" })),
+    veterinaryProfile,
+    veterinarians: veterinarians.map((veterinarian) => ({ id: veterinarian.id, name: veterinarian.name, email: veterinarian.email, ...veterinarian.veterinaryProfile! })),
+    collaborations: collaborations.map((collaboration) => ({ id: collaboration.id, shelterId: collaboration.shelterId, shelterName: collaboration.shelter.name, shelterEmail: collaboration.shelter.email, veterinarianId: collaboration.veterinarianId, veterinarianName: collaboration.veterinarian.name, veterinarianEmail: collaboration.veterinarian.email, status: collaboration.status, message: collaboration.message, createdAt: collaboration.createdAt.toISOString(), updatedAt: collaboration.updatedAt.toISOString(), participantsActive: collaboration.shelter.active && collaboration.shelter.role === "REFUGIO" && collaboration.veterinarian.active && collaboration.veterinarian.role === "VETERINARIO" })),
+    auditEvents: auditEvents.map((event) => ({ id: event.id, actorId: event.actorId, actorName: event.actorName, actorRole: event.actorRole, action: event.action, targetId: event.targetId, targetName: event.targetName, before: event.before as Record<string, unknown>, after: event.after as Record<string, unknown>, createdAt: event.createdAt.toISOString() })),
   };
 }
 
@@ -153,6 +163,11 @@ export async function executeCommand(headers: Headers, input: unknown): Promise<
   const user = await getViewer(headers);
   if (!user) throw new RequestError("Inicia sesión para continuar.", 401);
   const action = command.data;
+  const collaborationAction = collaborationCommandSchema.safeParse(action);
+  if (collaborationAction.success) {
+    await serializable((transaction) => executeCollaboration(transaction, user, collaborationAction.data));
+    return;
+  }
 
   if (action.type === "profile.save") {
     requireRole(user, ["ADOPTANTE"]);
@@ -240,41 +255,12 @@ export async function executeCommand(headers: Headers, input: unknown): Promise<
   }
   if (action.type === "medical.create") {
     requireRole(user, ["VETERINARIO", "ADMIN"]);
-    const pet = await db.pet.findFirst({ where: { id: action.record.petId, ...(user.role === "ADMIN" ? {} : { shelter: { active: true } }) } });
-    if (!pet) throw new RequestError("Mascota no encontrada.", 404);
-    const date = new Date(action.record.date);
-    const nextDate = action.record.nextDate ? new Date(action.record.nextDate) : null;
-    if (nextDate && nextDate < date) throw new RequestError("La próxima cita no puede ser anterior al registro.");
-    if (date.getTime() > Date.now() + 24 * 60 * 60 * 1000) throw new RequestError("El registro debe corresponder a una atención ya realizada.");
-    await db.medicalRecord.create({ data: { ...action.record, date, nextDate, veterinarianId: user.id } });
+    await serializable((transaction) => createAuthorizedMedicalRecord(transaction, user, action.record));
     return;
   }
-  if (action.type === "user.toggle") {
+  if (action.type === "user.toggle" || action.type === "user.role") {
     requireRole(user, ["ADMIN"]);
-    if (action.id === user.id) throw new RequestError("No puedes desactivar tu propia cuenta.");
-    await serializable(async (transaction) => {
-      const target = await transaction.user.findUnique({ where: { id: action.id } });
-      if (!target) throw new RequestError("Cuenta no encontrada.", 404);
-      await transaction.user.update({ where: { id: target.id }, data: { active: !target.active } });
-      if (target.active) await transaction.session.deleteMany({ where: { userId: target.id } });
-    });
-    return;
-  }
-  if (action.type === "user.role") {
-    requireRole(user, ["ADMIN"]);
-    if (action.id === user.id) throw new RequestError("No puedes cambiar el rol de tu propia cuenta.");
-    await serializable(async (transaction) => {
-      const target = await transaction.user.findUnique({ where: { id: action.id } });
-      if (!target) throw new RequestError("Cuenta no encontrada.", 404);
-      if (target.role === action.role) return;
-      if (target.role === "REFUGIO" && await transaction.pet.count({ where: { shelterId: target.id } }) > 0) {
-        throw new RequestError("Este refugio tiene mascotas registradas. Conserva su rol hasta transferir su responsabilidad.", 409);
-      }
-      if (target.role === "ADOPTANTE" && await transaction.adoptionApplication.count({ where: { adopterId: target.id, status: { in: ["enviada", "en_revision", "entrevista", "visita", "aprobada"] } } }) > 0) {
-        throw new RequestError("Esta cuenta tiene solicitudes de adopción activas. Deben concluir antes de cambiar su rol.", 409);
-      }
-      await transaction.user.update({ where: { id: target.id }, data: { role: action.role } });
-    });
+    await serializable((transaction) => executeAccountAdministration(transaction, user, action));
     return;
   }
   if (action.type === "report.resolve") {

@@ -1,0 +1,2 @@
+ALTER TABLE "VeterinaryProfile" ADD COLUMN "clinicName" TEXT NOT NULL DEFAULT '',
+ADD COLUMN "phone" TEXT NOT NULL DEFAULT '';

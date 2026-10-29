@@ -38,3 +38,9 @@ export function getPasswordValidationError(password: string): string | null {
   if (!checks.noBirthYear) return "Por seguridad no utilices años o fechas de nacimiento (ej. 1998, 2004).";
   return null;
 }
+
+export function getPasswordConfirmationError(password: string, confirmation: string): string | null {
+  if (!confirmation) return "Vuelve a escribir tu contraseña para confirmarla.";
+  if (password !== confirmation) return "Las contraseñas no coinciden. Revisa ambos campos.";
+  return null;
+}
