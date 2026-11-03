@@ -26,3 +26,16 @@ test("notificaciones móviles y footer tienen reglas específicas de encuadre", 
   const landing = readFileSync(new URL("../src/components/landing.module.css", import.meta.url), "utf8");
   assert.match(landing, /\.footer \{ flex-direction: column; align-items: center; justify-content: center; text-align: center;/);
 });
+
+test("footer descuenta los márgenes del ancho para no desplazarse a la derecha", () => {
+  const styles = readFileSync(new URL("../src/components/landing.module.css", import.meta.url), "utf8");
+  assert.match(styles, /\.footer \{[^}]*width: min\(calc\(100% - var\(--hero-gutter\) - var\(--hero-gutter\)\), calc\(1680px - var\(--hero-gutter\) - var\(--hero-gutter\)\)\); margin-inline: auto;/);
+  assert.doesNotMatch(styles, /\.footer\s*\{[^}]*margin-inline:\s*var\(--hero-gutter\)/);
+  for (const viewport of [320, 360, 390, 430, 760, 1920]) {
+    const gutter = Math.min(56, Math.max(24, viewport * 0.035));
+    const width = Math.min(viewport, 1680) - gutter * 2;
+    const margin = (viewport - width) / 2;
+    assert.ok(margin >= gutter);
+    assert.equal(margin + width / 2, viewport / 2);
+  }
+});
