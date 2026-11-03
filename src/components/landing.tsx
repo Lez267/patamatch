@@ -68,7 +68,7 @@ export function Landing({ children }: { children: ReactNode }) {
     <div className={styles.page}>
       <a className="skip-link" href="#bienvenida">Saltar al contenido</a>
       <header className={styles.header}>
-        <a className={styles.brand} href="/" aria-label="PataMatch, inicio">
+        <a className={styles.brand} href="/" aria-label="PataMatch, Un hogar, una nueva historia, inicio">
           <span className="brand-mark"><PawPrint size={26} /></span>
           <span className="brand-wordmark">PataMatch<span>Un hogar, una nueva historia</span></span>
         </a>
@@ -142,7 +142,11 @@ export function Landing({ children }: { children: ReactNode }) {
         </ol>
       </section>
 
-      <footer className={styles.footer}><span>Adopción responsable. Compañía para toda la vida.</span><span>Hecho para conectar vidas <PawPrint size={13} aria-hidden="true" /></span></footer>
+      <footer className={styles.footer}>
+        <div><strong>PataMatch</strong><p>Adopción responsable. Compañía para toda la vida.</p></div>
+        <nav aria-label="Información de PataMatch"><button type="button" onClick={() => setPanel("about")}>Cómo funciona</button><button type="button" onClick={() => setPanel("access")}>Acceso para refugios</button></nav>
+        <span>Hecho para conectar vidas <PawPrint size={13} aria-hidden="true" /></span>
+      </footer>
     </div>
 
     <dialog ref={dialogRef} className={`${styles.dialog} ${panel === "menu" ? styles.mobileMenu : ""}`} onCancel={() => setPanel(null)} onClose={() => setPanel(null)} onClick={(event) => { if (event.target === event.currentTarget) setPanel(null); }} aria-label={panel === "access" ? "Acceso a PataMatch" : panel === "about" ? "Cómo funciona PataMatch" : "Menú principal"}>

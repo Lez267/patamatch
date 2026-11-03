@@ -6,6 +6,7 @@ import { calculateMatch, canTransitionApplication, isActiveApplication } from ".
 import { collaborationCommands, collaborationCommandSchema, createAuthorizedMedicalRecord, executeCollaboration, veterinaryPetFilter } from "./collaborations";
 import { executeAccountAdministration } from "./account-administration";
 import { RequestError } from "./request-error";
+import { getMotivationError, MAX_MOTIVATION_CHARACTERS } from "./adoption-motivation";
 export { RequestError } from "./request-error";
 import type { AppState, AdoptionApplication, ApplicationStatus, LifestyleProfile, MedicalRecord, Pet, Role, User } from "./types";
 
@@ -64,7 +65,7 @@ export const commandSchema = z.discriminatedUnion("type", [
   ...collaborationCommands,
   z.object({ type: z.literal("profile.save"), profile: profileSchema }).strict(),
   z.object({ type: z.literal("favorite.toggle"), petId: identifierSchema }).strict(),
-  z.object({ type: z.literal("application.create"), petId: identifierSchema, motivation: z.string().trim().min(30).max(3000), phone: z.string().trim().regex(/^[0-9]{10}$/, "Escribe un teléfono de 10 dígitos."), commitment: z.boolean() }).strict(),
+  z.object({ type: z.literal("application.create"), petId: identifierSchema, motivation: z.string().trim().max(MAX_MOTIVATION_CHARACTERS).refine(value => getMotivationError(value) === null, "Escribe al menos 30 palabras sobre el hogar que puedes ofrecer."), phone: z.string().trim().regex(/^[0-9]{10}$/, "Escribe un teléfono de 10 dígitos."), commitment: z.boolean() }).strict(),
   z.object({ type: z.literal("application.status"), id: identifierSchema, status: statusSchema, note: z.string().trim().max(2000) }).strict().refine((action) => action.status !== "rechazada" || action.note.length >= 8, { message: "Explica el motivo del rechazo en al menos 8 caracteres." }),
   z.object({ type: z.literal("pet.create"), pet: petSchema }).strict(),
   z.object({ type: z.literal("pet.update"), id: identifierSchema, changes: petSchema.partial().refine((changes) => Object.keys(changes).length > 0, "Incluye al menos un cambio.") }).strict(),

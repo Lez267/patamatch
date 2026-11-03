@@ -192,6 +192,11 @@
 .steps li div > span { color: var(--muted); font-size: 11px; line-height: 1.5; }
 .footer { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 16px; padding: 16px var(--hero-gutter) 22px; color: var(--muted); font-size: 12px; line-height: 1.5; }
 .footer > span:last-child { display: flex; align-items: center; gap: 8px; }
+.footer { border-top: 1px solid var(--border); align-items: center; margin-inline: var(--hero-gutter); padding-inline: 0; }
+.footer strong { font-family: "Fraunces", Georgia, serif; font-size: 22px; color: var(--forest-dk); }
+.footer p { margin: 6px 0 0; }
+.footer nav { display: flex; flex-wrap: wrap; gap: 12px 20px; }
+.footer button { background: transparent; border: 0; color: var(--forest-dk); padding: 10px 0; min-height: 44px; font: inherit; font-weight: 700; cursor: pointer; }
 
 .dialog { width: min(620px, calc(100vw - 32px)); max-width: none; max-height: calc(100svh - 40px); border: 0; border-radius: var(--radius-lg); padding: 0; background: var(--bg); color: var(--ink); box-shadow: 0 25px 80px color-mix(in srgb, var(--forest-dk) 30%, transparent); }
 .dialog::backdrop { background: color-mix(in srgb, var(--forest-dk) 50%, transparent); backdrop-filter: blur(6px); }

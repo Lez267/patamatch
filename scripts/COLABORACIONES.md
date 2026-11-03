@@ -32,6 +32,8 @@ No se requieren servicios nuevos, nuevas claves de correo ni otra base. No ejecu
 
 Administración → Bitácora muestra los últimos 200 eventos con responsable, rol, cuenta o colaboración afectada, fecha y estados anteriores/nuevos. Incluye cambios de rol, suspensiones/reactivaciones y solicitudes/respuestas/finalizaciones. El evento se guarda en la misma transacción del cambio: si falla, tampoco se confirma el cambio.
 
+Cada evento se presenta por separado, con Realizado por, Cuenta afectada o Colaboración y comparación Antes/Después. La fecha y hora se muestran en Ciudad de México. Se puede buscar o filtrar por cambios de rol, accesos y colaboraciones; los filtros actúan sobre los 200 eventos cargados, no sobre todo el historial de la base. Los identificadores permanecen disponibles en Ver identificadores técnicos, cerrado inicialmente y operable con teclado.
+
 No contiene contraseñas, tokens, mensajes clínicos ni conexiones. No hay comandos de edición/borrado de bitácora en la aplicación. No reconstruye eventos anteriores ni captura SQL directo en Neon. Es una bitácora de aplicación, no un registro inalterable ante quien administra directamente PostgreSQL. No se incorporó eliminación definitiva de cuentas.
 
 ## Validación local

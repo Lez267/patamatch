@@ -6,6 +6,8 @@ import { ArrowRight, Check, RefreshCw } from "lucide-react";
 import { useApp } from "./app-provider";
 import { VeterinarianCard } from "./veterinarian-card";
 import { MedicalRecordMeta } from "./medical-record-meta";
+import { AuditEntry } from "./audit-entry";
+import { auditPresentation } from "@/lib/audit-presentation";
 import type { Collaboration, Command, VeterinaryProfile } from "@/lib/types";
 
 const statusLabels: Record<Collaboration["status"], string> = {
@@ -120,29 +122,22 @@ export function VeterinaryPatientsByShelter() {
 export function AdminAuditPage() {
   const { state, refresh, toast } = useApp();
   const [query, setQuery] = useState("");
+  const [category, setCategory] = useState("all");
   const [busy, setBusy] = useState(false);
-  const labels: Record<string, string> = { "user.role": "Cambio de rol", "user.toggle": "Suspensión / reactivación", "collaboration.request": "Solicitud de colaboración", "collaboration.respond": "Respuesta a solicitud", "collaboration.end": "Fin de colaboración" };
-  const events = state.auditEvents.filter((event) => `${event.actorName} ${event.actorId} ${event.targetName} ${event.targetId} ${labels[event.action] ?? event.action}`.toLocaleLowerCase("es").includes(query.toLocaleLowerCase("es")));
-  function changes(values: Record<string, unknown>) {
-    const names: Record<string, string> = { role: "Rol", active: "Acceso", status: "Estado" };
-    const roles: Record<string, string> = { ADMIN: "Administrador", VETERINARIO: "Veterinario", REFUGIO: "Refugio", ADOPTANTE: "Adoptante", ...statusLabels };
-    return Object.entries(values).map(([key, value]) => `${names[key] ?? key}: ${value === null ? "Sin solicitud previa" : typeof value === "boolean" ? value ? "Activo" : "Suspendido" : roles[String(value)] ?? String(value)}`).join(" · ");
-  }
-  return <section className="workspace-section collaboration-workspace">
+  const events = state.auditEvents.filter((event) => {
+    const presentation = auditPresentation(event);
+    return (category === "all" || presentation.category === category) && `${event.actorName} ${event.actorId} ${event.targetName} ${event.targetId} ${presentation.title}`.toLocaleLowerCase("es").includes(query.trim().toLocaleLowerCase("es"));
+  });
+  return <section className="workspace-section collaboration-workspace audit-workspace">
     <div className="page-head">
       <div><p className="eyebrow">TRAZABILIDAD DE LA COMUNIDAD</p><h1 className="page-title">Bitácora de actividad</h1><p className="page-subtitle">Quién realizó cada cambio y cómo estaba antes. Solo consulta.</p></div>
-      <button className="button secondary" disabled={busy} onClick={async () => { setBusy(true); try { await refresh(); } catch { toast("No pudimos actualizar la bitácora."); } finally { setBusy(false); } }}>Actualizar</button>
+      <button className="button secondary" disabled={busy} onClick={async () => { setBusy(true); try { await refresh(); } catch { toast("No pudimos actualizar la bitácora."); } finally { setBusy(false); } }}>{busy ? "Actualizando…" : "Actualizar"}</button>
     </div>
-    <div className="panel stack">
-      <label className="field"><span className="field-label">Buscar en la bitácora</span><input type="search" className="input" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Responsable, cuenta o acción" /></label>
-      <p className="helper">Últimos 200 eventos. Se registra actividad desde la incorporación de esta función; los cambios anteriores y los realizados directamente en Neon no aparecen aquí.</p>
-      {events.length ? events.map((event) => <article className="collaboration-person stack" key={event.id}>
-        <div className="row"><h2>{labels[event.action] ?? event.action}</h2><time dateTime={event.createdAt}>{dateLabel(event.createdAt)}</time></div>
-        <p><strong>{event.actorName}</strong> ({event.actorRole}) → {event.targetName}</p>
-        <p className="helper">Responsable: {event.actorId} · Destino: {event.targetId}</p>
-        <dl className="audit-values"><div><dt>Antes</dt><dd>{changes(event.before)}</dd></div><div><dt>Después</dt><dd>{changes(event.after)}</dd></div></dl>
-        <p className="helper">Referencia: {event.id}</p>
-      </article>) : <p className="empty-state">No hay eventos que mostrar.</p>}
+    <div className="panel audit-toolbar">
+      <div className="audit-filters"><label className="field"><span className="field-label">Buscar en la bitácora</span><input type="search" className="input" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Nombre del responsable, cuenta o acción" /></label><label className="field"><span className="field-label">Tipo de actividad</span><select className="select" value={category} onChange={(event) => setCategory(event.target.value)}><option value="all">Todas las actividades</option><option value="roles">Cambios de rol</option><option value="access">Suspensiones y reactivaciones</option><option value="collaborations">Colaboraciones veterinarias</option></select></label></div>
+      <div className="audit-results"><p role="status">{events.length} de {state.auditEvents.length} eventos cargados</p><span>Más recientes primero · Solo lectura</span></div>
     </div>
+    <div className="audit-event-list">{events.length ? events.map((event) => <AuditEntry event={event} key={event.id} />) : <div className="panel empty-state"><h2>{state.auditEvents.length ? "No encontramos coincidencias" : "Aún no hay actividad registrada"}</h2><p className="muted">{state.auditEvents.length ? "Prueba con otro nombre o cambia el tipo de actividad." : "Los cambios de permisos, accesos y colaboraciones aparecerán aquí."}</p>{(query || category !== "all") && <button className="button secondary" onClick={() => { setQuery(""); setCategory("all"); }}>Limpiar filtros</button>}</div>}</div>
+    <p className="helper audit-scope-note">Se muestran los últimos 200 eventos registrados por la aplicación. No incluye cambios anteriores a esta función ni modificaciones hechas directamente en Neon.</p>
   </section>;
 }

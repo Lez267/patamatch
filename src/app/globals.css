@@ -731,6 +731,37 @@ input[type="range"].range { min-height: 30px; height: 30px; padding: 0; border: 
 .application-card-actions, .application-card-actions > .row { flex-wrap: wrap; }
 .application-card-actions > .row { min-width: 0; }
 .application-card-actions .button { white-space: normal; }
+.wizard-step-title { scroll-margin-top: 24px; }
+.wizard-step-title:focus { outline: 2px solid var(--forest); outline-offset: 6px; border-radius: 4px; }
+.swipe-instructions { margin-bottom: 20px; padding: 16px 18px; border: 1px solid var(--border); border-radius: 16px; background: var(--bg); color: var(--forest-dk); }
+.swipe-instructions p { margin: 8px 0 0; font-size: 13px; line-height: 1.7; }
+.swipe-actions .button.icon { flex: 0 0 62px; width: 62px; min-width: 62px; height: 62px; min-height: 62px; aspect-ratio: 1; border-radius: 50%; padding: 0; }
+.application-card { min-width: 0; }
+.application-card-head { gap: 16px; align-items: flex-start; flex-wrap: wrap; }
+.application-card-head > .row { min-width: 0; flex: 1 1 220px; align-items: center; }
+.application-card-head > .row > div { min-width: 0; overflow-wrap: anywhere; }
+.application-card .pet-avatar { flex-shrink: 0; }
+.application-stepper > li { min-width: 0; }
+.application-stepper > li > span { flex: 0 0 30px; }
+.application-stepper > li > small { font-size: 12px; line-height: 1.5; overflow-wrap: anywhere; }
+.application-timeline .timeline-item > .step-dot { position: relative; flex: 0 0 35px; width: 35px; height: 35px; }
+.application-timeline .timeline-item > div { min-width: 0; }
+.application-timeline .timeline-item::after { left: 17px; top: 35px; }
+.application-timeline .timeline-item .row { flex-wrap: wrap; }
+.application-card p { overflow-wrap: anywhere; }
+.application-card details { border-top: 1px solid var(--border); padding-top: 16px; }
+.application-card summary { line-height: 1.6; }
+.application-card-head .muted { font-size: 12px; }
+.notification-item small { font-size: 12px; }
+.contact-phone-field .input[aria-invalid="true"] { border-color: #8d3d32; box-shadow: 0 0 0 2px #8d3d3226; }
+.contact-phone-field .helper { margin-top: 0; }
+.application-card-actions { border-top: 1px solid var(--border); padding-top: 16px; gap: 12px; }
+@media (max-width: 600px) {
+  .swipe-actions { gap: 18px; }
+  .application-card-actions > .row { flex: 1 1 100%; }
+  .application-card-actions > .row .button { flex: 1 1 140px; }
+  .application-stepper { gap: 16px 8px; }
+}
 .applicant-profile { min-width: 0; padding-block: 16px; }
 .applicant-profile h3, .applicant-profile p { margin-bottom: 0; }
 .snapshot-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 160px), 1fr)); gap: 14px 20px; }
@@ -868,3 +899,41 @@ input[type="range"].range { min-height: 30px; height: 30px; padding: 0; border: 
 .veterinarian-card-actions { margin-top: auto; }
 .veterinarian-card-actions > .button { width: 100%; }
 .medical-record-meta { display: grid; gap: 4px; margin-top: 12px; }
+.audit-toolbar { display: grid; gap: 20px; margin-bottom: 28px; }
+.audit-filters { display: grid; grid-template-columns: minmax(0, 1fr) minmax(220px, .55fr); gap: 20px; }
+.audit-results { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px 20px; color: var(--muted); font-size: 13px; }
+.audit-results p { margin: 0; font-weight: 700; }
+.audit-event-list { display: grid; gap: 28px; }
+.audit-event { min-width: 0; overflow-wrap: anywhere; padding: 28px; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--bg-hi); box-shadow: var(--shadow-sm); }
+.audit-event-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; padding-bottom: 24px; border-bottom: 1px solid var(--border); }
+.audit-event-title { display: flex; align-items: flex-start; gap: 14px; min-width: 0; }
+.audit-event-icon { display: grid; place-items: center; width: 44px; height: 44px; flex: 0 0 auto; border-radius: 14px; background: #dce7d6; color: var(--forest-dk); }
+.audit-event h2 { margin: 0 0 8px; font-size: 25px; }
+.audit-event-title p { margin: 0; font-size: 14px; color: var(--muted); line-height: 1.6; }
+.audit-event-date { display: grid; gap: 3px; text-align: end; flex: 0 0 auto; font-size: 13px; color: var(--muted); }
+.audit-event-date strong { font-size: 16px; color: var(--ink); }
+.audit-event-date small { font-size: 12px; }
+.audit-people { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; margin: 24px 0; }
+.audit-people dt, .audit-state dt { font-size: 13px; color: var(--muted); }
+.audit-people dd { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin: 8px 0 0; }
+.audit-comparison { display: grid; grid-template-columns: minmax(0, 1fr) 22px minmax(0, 1fr); gap: 16px; align-items: stretch; }
+.audit-state { padding: 20px; border: 1px solid var(--border); border-radius: 16px; background: #f2f5ef; }
+.audit-state-after { background: #e2eddc; border-color: #b6c8ab; }
+.audit-state h3 { margin: 0 0 16px; font-family: inherit; font-size: 13px; font-weight: 700; color: var(--forest-dk); }
+.audit-state dl { display: grid; gap: 16px; margin: 0; }
+.audit-state dd { margin: 6px 0 0; font-size: 18px; font-weight: 700; }
+.audit-change-arrow { align-self: center; color: var(--forest); }
+.audit-technical { margin-top: 24px; padding: 16px 0 0; border-top: 1px solid var(--border); border-bottom: 0; }
+.audit-technical summary { width: fit-content; padding: 6px 0; font-size: 13px; color: var(--muted); cursor: pointer; }
+.audit-technical dl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin: 20px 0 0; }
+.audit-technical dt { font-size: 12px; color: var(--muted); }
+.audit-technical dd { margin: 6px 0 0; font-size: 12px; }
+.audit-scope-note { margin-top: 24px; line-height: 1.7; }
+@media (max-width: 700px) {
+  .audit-filters, .audit-people, .audit-technical dl { grid-template-columns: minmax(0, 1fr); }
+  .audit-event { padding: 20px; }
+  .audit-event-header { flex-direction: column; gap: 16px; }
+  .audit-event-date { text-align: start; }
+  .audit-comparison { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+  .audit-change-arrow { justify-self: center; transform: rotate(90deg); }
+}

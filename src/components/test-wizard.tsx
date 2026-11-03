@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, ArrowRight, Check, Heart, Home, MapPin, ShieldCheck, Sparkles, UsersRound } from "lucide-react";
 import { useApp } from "@/components/app-provider";
@@ -103,6 +103,14 @@ export function TestWizard() {
   });
 
   const [step, setStep] = useState(0);
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  const previousStep = useRef(step);
+  useEffect(() => {
+    if (previousStep.current === step) return;
+    previousStep.current = step;
+    headingRef.current?.focus({ preventScroll: true });
+    headingRef.current?.scrollIntoView({ block: "start", behavior: "instant" });
+  }, [step]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
@@ -275,7 +283,7 @@ export function TestWizard() {
 
       <section className="panel stack">
         <div className="panel-head">
-          <h2>{titles[step]}</h2>
+          <h2 ref={headingRef} tabIndex={-1} className="wizard-step-title">{titles[step]}</h2>
           <span className="badge subtle">Paso {step + 1} de 3 · Campos obligatorios</span>
         </div>
 
