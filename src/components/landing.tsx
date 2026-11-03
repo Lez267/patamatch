@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { ArrowRight, Heart, House, Menu, Pause, PawPrint, Play, Sparkles, X } from "lucide-react";
 import styles from "./landing.module.css";
 
-export function Landing({ children }: { children: ReactNode }) {
+export function Landing({ children, onShelterRegister }: { children: ReactNode; onShelterRegister?: () => void }) {
   const [panel, setPanel] = useState<"access" | "about" | "menu" | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [videoUnavailable, setVideoUnavailable] = useState(false);
@@ -64,6 +64,11 @@ export function Landing({ children }: { children: ReactNode }) {
     else video.pause();
   }
 
+  function openShelterRegistration() {
+    onShelterRegister?.();
+    setPanel("access");
+  }
+
   return <>
     <div className={styles.page}>
       <a className="skip-link" href="#bienvenida">Saltar al contenido</a>
@@ -74,7 +79,7 @@ export function Landing({ children }: { children: ReactNode }) {
         </a>
         <nav className={styles.navigation} aria-label="Navegación principal">
           <button type="button" onClick={() => setPanel("about")}>Cómo funciona</button>
-          <button type="button" onClick={() => setPanel("access")}>Para refugios</button>
+          <button type="button" onClick={openShelterRegistration}>Para refugios</button>
         </nav>
         <button type="button" className={`button secondary ${styles.access}`} onClick={() => setPanel("access")}>
           Entrar a PataMatch <ArrowRight size={17} />
@@ -144,7 +149,7 @@ export function Landing({ children }: { children: ReactNode }) {
 
       <footer className={styles.footer}>
         <div><strong>PataMatch</strong><p>Adopción responsable. Compañía para toda la vida.</p></div>
-        <nav aria-label="Información de PataMatch"><button type="button" onClick={() => setPanel("about")}>Cómo funciona</button><button type="button" onClick={() => setPanel("access")}>Acceso para refugios</button></nav>
+        <nav aria-label="Información de PataMatch"><button type="button" onClick={() => setPanel("about")}>Cómo funciona</button><button type="button" onClick={openShelterRegistration}>Acceso para refugios</button></nav>
         <span>Hecho para conectar vidas <PawPrint size={13} aria-hidden="true" /></span>
       </footer>
     </div>
@@ -154,7 +159,7 @@ export function Landing({ children }: { children: ReactNode }) {
         <button type="button" className={styles.close} onClick={() => setPanel(null)} aria-label="Cerrar"><X size={22} /></button>
         {panel === "access" && children}
         {panel === "about" && <div className={styles.about}><PawPrint size={32} /><h2>Una adopción,<br />paso a paso.</h2><p>Cada mascota tiene su historia. Cada persona, su forma de vivir. PataMatch te ayuda a encontrar una buena conexión.</p><ol><li><strong>Encuentra a tu compañero</strong><span>Explora las mascotas y completa tu perfil para conocer su compatibilidad contigo.</span></li><li><strong>Conecta con el refugio</strong><span>Envía tu solicitud y coordina una entrevista o una visita para conocerse.</span></li><li><strong>Comienza una nueva historia</strong><span>Acompaña el proceso de adopción y el seguimiento de su bienestar.</span></li></ol><button className="button primary" type="button" onClick={() => setPanel("access")}>Quiero empezar <ArrowRight size={18} /></button></div>}
-        {panel === "menu" && <nav className={styles.menuLinks} aria-label="Navegación móvil"><span className={styles.menuBrand}><span className="brand-mark"><PawPrint size={26} /></span>PataMatch</span><button type="button" onClick={() => setPanel("about")}>Cómo funciona</button><button type="button" onClick={() => setPanel("access")}>Para refugios</button><button type="button" onClick={() => setPanel("access")}>Entrar <ArrowRight size={25} /></button></nav>}
+        {panel === "menu" && <nav className={styles.menuLinks} aria-label="Navegación móvil"><span className={styles.menuBrand}><span className="brand-mark"><PawPrint size={26} /></span>PataMatch</span><button type="button" onClick={() => setPanel("about")}>Cómo funciona</button><button type="button" onClick={openShelterRegistration}>Para refugios</button><button type="button" onClick={() => setPanel("access")}>Entrar <ArrowRight size={25} /></button></nav>}
       </div>
     </dialog>
   </>;

@@ -197,6 +197,12 @@
 .footer p { margin: 6px 0 0; }
 .footer nav { display: flex; flex-wrap: wrap; gap: 12px 20px; }
 .footer button { background: transparent; border: 0; color: var(--forest-dk); padding: 10px 0; min-height: 44px; font: inherit; font-weight: 700; cursor: pointer; }
+@media (max-width: 760px) {
+  .footer { flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+  .footer > div { width: 100%; }
+  .footer nav { justify-content: center; }
+  .footer > span:last-child { justify-content: center; }
+}
 
 .dialog { width: min(620px, calc(100vw - 32px)); max-width: none; max-height: calc(100svh - 40px); border: 0; border-radius: var(--radius-lg); padding: 0; background: var(--bg); color: var(--ink); box-shadow: 0 25px 80px color-mix(in srgb, var(--forest-dk) 30%, transparent); }
 .dialog::backdrop { background: color-mix(in srgb, var(--forest-dk) 50%, transparent); backdrop-filter: blur(6px); }

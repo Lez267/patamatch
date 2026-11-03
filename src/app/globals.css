@@ -753,6 +753,12 @@ input[type="range"].range { min-height: 30px; height: 30px; padding: 0; border: 
 .application-card summary { line-height: 1.6; }
 .application-card-head .muted { font-size: 12px; }
 .notification-item small { font-size: 12px; }
+.notification-dropdown { max-height: min(560px, calc(100dvh - 120px)); overflow-y: auto; overscroll-behavior: contain; overflow-wrap: anywhere; }
+.notification-dropdown > .row { flex-wrap: wrap; gap: 8px; }
+.notification-item strong { gap: 8px; }
+@media (max-width: 760px) {
+  .notification-dropdown { position: fixed; top: 84px; left: max(14px, env(safe-area-inset-left)); right: max(14px, env(safe-area-inset-right)); width: auto; max-width: none; max-height: calc(100dvh - 184px - env(safe-area-inset-bottom)); }
+}
 .contact-phone-field .input[aria-invalid="true"] { border-color: #8d3d32; box-shadow: 0 0 0 2px #8d3d3226; }
 .contact-phone-field .helper { margin-top: 0; }
 .application-card-actions { border-top: 1px solid var(--border); padding-top: 16px; gap: 12px; }

@@ -58,6 +58,7 @@ function Login() {
   const [password, setPassword] = useState("");
   const [passwordConfirmation, setPasswordConfirmation] = useState("");
   const [confirmationTouched, setConfirmationTouched] = useState(false);
+  const [registrationRole, setRegistrationRole] = useState<"ADOPTANTE" | "REFUGIO">("ADOPTANTE");
   const confirmationRef = useRef<HTMLInputElement>(null);
 
   const pwdCheck = validatePasswordSecurity(password);
@@ -99,12 +100,12 @@ function Login() {
         name: name.trim(),
         email: email.trim(),
         password,
-      });
+      }, { headers: { "x-patamatch-registration": registrationRole } });
       if (result.error) {
         throw new Error(result.error.message ?? "No se pudo crear la cuenta. Revisa que el correo sea válido o no esté registrado previamente.");
       }
       await refresh();
-      router.replace("/test");
+      router.replace(registrationRole === "REFUGIO" ? "/refugio" : "/test");
     } catch (failure) {
       setError(failure instanceof Error ? failure.message : "No hay conexión con el servidor.");
     } finally {
@@ -113,7 +114,7 @@ function Login() {
   }
 
   return (
-    <Landing>
+    <Landing onShelterRegister={() => { setRegistrationRole("REFUGIO"); setMode("register"); setError(""); }}>
       <section className="login-card">
         <div className="segmented-control login-tabs" role="group" aria-label="Opciones de acceso" style={{ marginBottom: "22px", gridTemplateColumns: demoEnabled ? undefined : "repeat(2, minmax(0, 1fr))" }}>
           {demoEnabled && <button
@@ -174,17 +175,18 @@ function Login() {
 
         {mode === "register" && (
           <>
-            <span className="badge green"><Sparkles size={13} /> Registro de Adoptante</span>
+            <span className="badge green"><Sparkles size={13} /> {registrationRole === "REFUGIO" ? "Registro de Refugio" : "Registro de Adoptante"}</span>
             <h2>Crea tu cuenta</h2>
-            <p className="muted">Regístrate para realizar tu test de estilo de vida y calcular tu match real con las mascotas.</p>
+            <p className="muted">{registrationRole === "REFUGIO" ? "Crea tu cuenta para registrar mascotas y gestionar sus solicitudes de adopción." : "Regístrate para realizar tu test de estilo de vida y calcular tu match real con las mascotas."}</p>
             <form className="stack" onSubmit={signUp}>
+              <label className="field">Tipo de cuenta<select className="select" value={registrationRole} disabled={!!busy} onChange={event => setRegistrationRole(event.target.value === "REFUGIO" ? "REFUGIO" : "ADOPTANTE")}><option value="ADOPTANTE">Quiero adoptar</option><option value="REFUGIO">Soy un refugio</option></select></label>
               <label className="field">
-                Nombre completo
+                {registrationRole === "REFUGIO" ? "Nombre del refugio" : "Nombre completo"}
                 <input
                   className="input"
                   required
                   maxLength={80}
-                  placeholder="Ej. Jorge Morales"
+                  placeholder={registrationRole === "REFUGIO" ? "Ej. Refugio Huellitas" : "Ej. Jorge Morales"}
                   value={name}
                   onChange={(event) => setName(event.target.value)}
                 />

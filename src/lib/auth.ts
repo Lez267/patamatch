@@ -5,6 +5,7 @@ import { db } from "./db";
 import { getPasswordValidationError } from "./password-policy";
 import { getTrustedOrigins } from "./trusted-origins";
 import { getAuthBaseURL } from "./auth-url";
+import { getRegistrationRole } from "./registration-role";
 
 export const auth = betterAuth({
   appName: "PataMatch",
@@ -33,7 +34,7 @@ export const auth = betterAuth({
   databaseHooks: {
     user: {
       create: {
-        before: async (user) => ({ data: { ...user, role: "ADOPTANTE", active: true } }),
+        before: async (user, context) => ({ data: { ...user, role: getRegistrationRole(context?.path === "/sign-up/email" ? context.headers?.get("x-patamatch-registration") : null), active: true } }),
       },
     },
     session: {
